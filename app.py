@@ -1,8 +1,8 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Postgres1234@localhost:5432/jobsdata'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:adityaraj@localhost:5432/jobsdata'
 
 db=SQLAlchemy(app)
 
@@ -23,25 +23,20 @@ class jobsTable(db.Model):
 app.app_context().push()
 
 
-# with app.app_context():
-#   db.create_all()
 
-# app.route('/submit', methods=['POST'])
-# def submit():
-#   fname= request.form['fname']
-#   lname=request.form['lname']
-#   pet=request.form['pets']
+@app.route('/submit', methods=['POST'])
+def submit():
+  companyName= request.form['companyName']
+  title=request.form['title']
+  location=request.form['location']
+  salary=request.form['salary']
 
-#   student=Student(fname,lname,pet)
-#   db.session.add(student)
-#   db.session.commit()
+  job_entry=jobsTable(companyName,title,location, salary)
+  db.session.add(job_entry)
+  db.session.commit()
 
-#   #fetch a certain student2
-#   studentResult=db.session.query(Student).filter(Student.id==1)
-#   for result in studentResult:
-#     print(result.fname)
-
-#   return render_template('success.html', data=fname)
+  return render_template('success.html', data=companyName)
+  
 
 JOBS = [
   {
@@ -78,5 +73,20 @@ def hello_world():
 def list_jobs():
   return jsonify(JOBS)
 
+
+@app.route("/jobitem")
+def job_item():
+  try:
+    print("Entering job_item route")
+    job_entries = jobsTable.query.all()
+    print("Query successful")
+    print(f"Number of jobs: {len(job_entries)}")
+    return render_template('jobitem.html', jobs=job_entries)
+  except Exception as e:
+    print(f"An error occurred: {e}")
+    return f"An error occurred: {e}"
+
+
+
 if __name__ == '__main__':
-  app.run(host='0.0.0.0', debug=True)
+  app.run(debug=True)
